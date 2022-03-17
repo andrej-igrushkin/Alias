@@ -1,22 +1,14 @@
 package com.example.test;
 
-import androidx.annotation.IdRes;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
-
-import java.util.List;
 
 public class PlayerActivity extends AppCompatActivity {
     static private ListView playerList;
@@ -45,7 +37,7 @@ public class PlayerActivity extends AppCompatActivity {
 
 
     static public void playerListDraw(){
-        PlayerAdapter playerAdapter = new PlayerAdapter(thisContext, R.layout.list_item , MainActivity.playerList);
+        PlayerAdapter playerAdapter = new PlayerAdapter(thisContext, R.layout.player_list_item, MainActivity.playerList);
 
         playerList.setAdapter(playerAdapter);
     }

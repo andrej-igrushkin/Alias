@@ -1,7 +1,6 @@
 package com.example.test;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
@@ -9,17 +8,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Environment;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -31,33 +26,38 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE = 123;
     public static ArrayList<String> words = new ArrayList<String>();
+    public static ArrayList<String> currentWords = new ArrayList<String>();
     public static ArrayList<Player> playerList = new ArrayList<Player>();
 //    public static Player[] playerWievList = new Player[]{new Player(), new Player(), new Player()};
 
+    static private ListView wordList;
 
     TextView wordView, rightIteratorView, wrongIteratorView, chronometer;
     Button skipBtn, rightBtn,startBtn , restartBtn, playerListBtn;
 
-    View startLayout,gameLayout;
+    boolean endTime = false;
+
+    View startLayout,gameLayout, currentWordLayout;
 
     Integer currentNumber = 0;
 
-//    CountDownTimer timer = new CountDownTimer(5000, 1000) {
-//        @Override
-//        public void onTick(long millisUntilFinished) {
-//            chronometer.setText("" + (millisUntilFinished/1000+1));
-//        }
-//
-//        @Override
-//        public void onFinish() {
-//            nextPlayer(playerList.size());
-//            wordView.setText(playerList.get(currentNumber).getName());
-//            rightIteratorView.setText(String.valueOf(playerList.get(currentNumber).getScore()));
-//            this.start();
-//        }
-//    };
+    CountDownTimer timer = new CountDownTimer(5000, 1000) {
+        @Override
+        public void onTick(long millisUntilFinished) {
+            chronometer.setText("" + (millisUntilFinished/1000+1));
+        }
 
-    static int i = 0;
+        @Override
+        public void onFinish() {
+            nextPlayer(playerList.size());
+//            wordView.setText(playerList.get(currentNumber).getName());
+            rightIteratorView.setText(String.valueOf(playerList.get(currentNumber).getScore()));
+            chronometer.setText("Последнее слово");
+            endTime = true;
+        }
+    };
+
+    static int wordIterator = 0;
     static int right = 0, wrong = 0;
 
 //    public MainActivity() throws IOException, ClassNotFoundException {
@@ -85,15 +85,19 @@ public class MainActivity extends AppCompatActivity {
             startBtn = findViewById(R.id.startBtn);
             playerListBtn = findViewById(R.id.playerListBtn);
 
+            wordList = findViewById(R.id.wordList);
+
             startLayout = findViewById(R.id.startLayout);
             startLayout.setVisibility(View.VISIBLE);
             gameLayout = findViewById(R.id.gameLayout);
+            currentWordLayout = findViewById(R.id.currentWordLayout);
 
             playerList.add(new Player());
             playerList.add(new Player());
             playerList.add(new Player());
 
-            wordView.setText(playerList.get(currentNumber).getName());
+
+//            wordView.setText(playerList.get(currentNumber).getName());
 
             FileInputStream fis = null;
 
@@ -102,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
             } catch (FileNotFoundException e) {
                 wordView.setText(e.toString());
             }
-
 
             XMLHandler handler;
             SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -117,6 +120,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             Collections.shuffle(words);
+
+            wordView.setText(words.get(wordIterator));
         }
 
 
@@ -125,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
             TextView wordView = findViewById(R.id.textView1);
 
             try {
-                wordView.setText(words.get(i++));
+                wordView.setText(words.get(wordIterator++));
             }
             catch (Exception e){
                 wordView.setText(e.toString());
@@ -133,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
     public void restartWord(View view) {
-        i = 0;
+        wordIterator = 0;
         right = 0;
         wrong = 0;
 
@@ -143,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
         Collections.shuffle(words);
 
         try {
-            wordView.setText(words.get(i++));
+            wordView.setText(words.get(wordIterator++));
         }
         catch (Exception e){
             wordView.setText(e.toString());
@@ -151,14 +156,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void right(View view) {
+    public void right(View view){
         playerList.get(currentNumber).upScore();
         rightIteratorView.setText(String.valueOf(playerList.get(currentNumber).getScore()));
-        wordView.setText(words.get(i++));
+        wordView.setText(words.get(++wordIterator));
+        if (endTime)
+        {
+            gameLayout.setVisibility(View.GONE);
+            currentWordLayout.setVisibility(View.VISIBLE);
+            ArrayAdapter<String> adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, currentWords);
+            wordList.setAdapter(adapter);
+        };
     }
 
-    public void wrong(View view) {
-        wordView.setText(words.get(i++));
+    public void contin (View view){
+
+        currentWordLayout.setVisibility(View.GONE);
+        gameLayout.setVisibility(View.VISIBLE);
+
+        currentWords.clear();
+        timer.start();
+
+    }
+
+    public void skip(View view) {
+        currentWords.add(words.get(wordIterator++));
+        wordView.setText(words.get(wordIterator));
     }
 
     public void start(View view) {
@@ -170,9 +193,11 @@ public class MainActivity extends AppCompatActivity {
 //            nextPlayer(playerList.size());
 //            wordView.setText(playerList.get(currentNumber).getName());
 //            playerListBtn.setVisibility(View.VISIBLE);
-        gameLayout.setVisibility(View.VISIBLE);
+//        intermediateLayout.setVisibility(View.GONE)
         startLayout.setVisibility(View.GONE);
-//        timer.start();
+        gameLayout.setVisibility(View.VISIBLE);
+        currentWords.clear();
+        timer.start();
     }
 
     public void playerListView(View view) {
@@ -203,4 +228,9 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
+//    public void currentWordsDrow(){
+//                ArrayAdapter<String> adapter = new ArrayAdapter(this, R.layout.word_list_item, currentWords);
+//                wordList.setAdapter(adapter);
+//    }
 }
